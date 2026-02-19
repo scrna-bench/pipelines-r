@@ -2,8 +2,8 @@ library(Seurat)
 library(SingleCellExperiment)
 
 run_seurat <- function(
-  sce, resolution, n_comp = 50, n_neig = 15, n_hvg = 1000,
-  filter = c("manual", "auto"), time
+  sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
+  filter = c("manual", "auto"), time, resolutions
 ) {
   filter <- match.arg(filter)
   # data ####
@@ -106,33 +106,45 @@ run_seurat <- function(
     data,
     dims = 1:n_comp, k.param = n_neig, verbose = T
   )
-  data <- FindClusters(
+  louvain_search <- binary_search(
     data,
-    algorithm = 1, cluster.name = "louvain",
-    resolution = resolution
+    do_clustering = function(spe, resolution) {
+      FindClusters(spe, algorithm = 1, cluster.name = "louvain", resolution = resolution)
+    },
+    extract_nclust = function(result) length(unique(result$louvain)),
+    n_clust_target = n_cluster
   )
+  data <- louvain_search$result
+  resolutions$louvain <- louvain_search$resolution
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Louvain Clustering. Time Elapsed:", time_elapsed))
+  print(paste("Louvain resolution:", resolutions$louvain))
   time$louvain <- time_elapsed
 
   # leiden ####
   start_time <- Sys.time()
-  # data <- FindNeighbors(data, dims = 1:50, verbose = T)
-  data <- FindClusters(
+  leiden_search <- binary_search(
     data,
-    algorithm = 4, cluster.name = "leiden",
-    resolution = resolution
+    do_clustering = function(spe, resolution) {
+      FindClusters(spe, algorithm = 4, cluster.name = "leiden", resolution = resolution)
+    },
+    extract_nclust = function(result) length(unique(result$leiden)),
+    n_clust_target = n_cluster
   )
+  data <- leiden_search$result
+  resolutions$leiden <- leiden_search$resolution
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Leiden Clustering. Time Elapsed:", time_elapsed))
+  print(paste("Leiden resolution:", resolutions$leiden))
   time$leiden <- time_elapsed
 
   return(list(
     pca = Embeddings(data, reduction = "pca"),
     hvgs = VariableFeatures(data),
     time = time,
+    resolutions = resolutions,
     cell_ids = colnames(data),
     leiden = data$leiden,
     louvain = data$louvain

@@ -3,8 +3,8 @@ library(DelayedArray)
 library(scrapper)
 
 run_scrapper <- function(
-  sce, resolution, n_comp = 50, n_neig = 15, n_hvg = 1000,
-  filter = c("manual", "auto"), time
+  sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
+  filter = c("manual", "auto"), time, resolutions
 ) {
   filter <- match.arg(filter)
   nthreads <- 1
@@ -99,43 +99,54 @@ run_scrapper <- function(
 
   # louvain  ####
   start_time <- Sys.time()
-  snn.graph <- buildSnnGraph(
+  snn.graph.louvain <- buildSnnGraph(
     pca$components,
     num.neighbors = n_neig, num.threads = nthreads
   )
-  clust.out <- clusterGraph(
-    snn.graph,
-    method = c("multilevel"),
-    multilevel.resolution = resolution
+  louvain_search <- binary_search(
+    snn.graph.louvain,
+    do_clustering = function(spe, resolution) {
+      clusterGraph(spe, method = c("multilevel"), multilevel.resolution = resolution)
+    },
+    extract_nclust = function(result) length(unique(result$membership)),
+    n_clust_target = n_cluster
   )
+  louvain_clustering <- louvain_search$result$membership
+  resolutions$louvain <- louvain_search$resolution
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Louvain clusterings. Time Elapsed:", time_elapsed))
+  print(paste("Louvain resolution:", resolutions$louvain))
   time$louvain <- time_elapsed
-  louvain_clustering <- clust.out$membership
 
   # leiden ####
   start_time <- Sys.time()
-  snn.graph <- buildSnnGraph(
+  snn.graph.leiden <- buildSnnGraph(
     pca$components,
     num.neighbors = n_neig, num.threads = nthreads
   )
-  clust.out <- clusterGraph(
-    snn.graph,
-    method = c("leiden"),
-    leiden.resolution = resolution
+  leiden_search <- binary_search(
+    snn.graph.leiden,
+    do_clustering = function(spe, resolution) {
+      clusterGraph(spe, method = c("leiden"), leiden.resolution = resolution)
+    },
+    extract_nclust = function(result) length(unique(result$membership)),
+    n_clust_target = n_cluster
   )
+  leiden_clustering <- leiden_search$result$membership
+  resolutions$leiden <- leiden_search$resolution
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Leiden clusterings. Time Elapsed:", time_elapsed))
+  print(paste("Leiden resolution:", resolutions$leiden))
   time$leiden <- time_elapsed
-  leiden_clustering <- clust.out$membership
 
   return(list(
     pca = reducedDim(filtered, "PCA"),
     hvgs = rownames(filtered)[hvg.sce.var],
     cell_ids = colnames(filtered),
     time = time,
+    resolutions = resolutions,
     leiden = leiden_clustering,
     louvain = louvain_clustering
   ))

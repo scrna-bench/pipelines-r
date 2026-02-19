@@ -31,9 +31,9 @@ parser$add_argument(
   choices = c("osca", "scrapper", "seurat"), required = TRUE
 )
 parser$add_argument(
-  "--resolution",
-  dest = "resolution", type = "numeric",
-  help = "clustering resolution",
+  "--n_cluster",
+  dest = "n_cluster", type = "integer",
+  help = "target number of clusters",
   required = TRUE
 )
 parser$add_argument(
@@ -69,9 +69,13 @@ m <- grep("--file=", cargs)
 run_dir <- dirname(gsub("--file=", "", cargs[[m]]))
 
 timings_path <- file.path(args$output_dir, paste0(args$name, ".timings.json"))
+resolutions_path <- file.path(args$output_dir, paste0(args$name, ".resolutions.json"))
 clusters_path <- file.path(args$output_dir, paste0(args$name, ".clusters.tsv"))
 pca_path <- file.path(args$output_dir, paste0(args$name, ".pca.tsv"))
 hvgs_path <- file.path(args$output_dir, paste0(args$name, ".hvgs.tsv"))
+
+search_res_path <- file.path(run_dir, "search_res.r")
+source(search_res_path)
 
 sce <- readH5AD(args$data_path, reader = "python")
 
@@ -83,27 +87,29 @@ time <- list(
   louvain = NA_real_, leiden = NA_real_
 )
 
+resolutions <- list(louvain = NA_real_, leiden = NA_real_)
+
 # source and run appropriate method
 if (args$method_name == "seurat") {
   seurat_r_path <- file.path(run_dir, "seurat.R")
   source(seurat_r_path)
   output_data <- run_seurat(
     sce,
-    args$resolution, args$n_comp, args$n_neig, args$n_hvg, args$filter, time
+    args$n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
   )
 } else if (args$method_name == "osca") {
   osca_r_path <- file.path(run_dir, "OSCA.R")
   source(osca_r_path)
   output_data <- run_osca(
     sce,
-    args$resolution, args$n_comp, args$n_neig, args$n_hvg, args$filter, time
+    args$n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
   )
 } else if (args$method_name == "scrapper") {
   scrapper_r_path <- file.path(run_dir, "scrapper.R")
   source(scrapper_r_path)
   output_data <- run_scrapper(
     sce,
-    args$resolution, args$n_comp, args$n_neig, args$n_hvg, args$filter, time
+    args$n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
   )
 }
 
@@ -113,6 +119,10 @@ output_data$time <- lapply(output_data$time, function(x) {
 })
 write_json(
   output_data$time, timings_path,
+  auto_unbox = TRUE, pretty = TRUE
+)
+write_json(
+  output_data$resolutions, resolutions_path,
   auto_unbox = TRUE, pretty = TRUE
 )
 write.table(

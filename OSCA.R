@@ -7,8 +7,8 @@ library(bluster)
 library(EnsDb.Hsapiens.v75)
 
 run_osca <- function(
-  sce, resolution, n_comp = 50, n_neig = 15, n_hvg = 1000,
-  filter = c("manual", "auto"), time
+  sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
+  filter = c("manual", "auto"), time, resolutions
 ) {
   filter <- match.arg(filter)
   #### 1. find mithocondial genes  ####
@@ -89,30 +89,50 @@ run_osca <- function(
 
   # louvain  ####
   start_time <- Sys.time()
-  louvain_clustering <- clusterCells(sce,
-    use.dimred = "PCA",
-    BLUSPARAM = NNGraphParam(
-      k = n_neig,
-      cluster.fun = "louvain", cluster.args = list(resolution = resolution)
-    )
+  louvain_search <- binary_search(
+    sce,
+    do_clustering = function(spe, resolution) {
+      clusterCells(spe,
+        use.dimred = "PCA",
+        BLUSPARAM = NNGraphParam(
+          k = n_neig,
+          cluster.fun = "louvain", cluster.args = list(resolution = resolution)
+        )
+      )
+    },
+    extract_nclust = function(result) length(unique(result)),
+    n_clust_target = n_cluster
   )
+  louvain_clustering <- louvain_search$result
+  resolutions$louvain <- louvain_search$resolution
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Louvain clusterings. Time Elapsed:", time_elapsed))
+  print(paste("Louvain resolution:", resolutions$louvain))
   time$louvain <- time_elapsed
 
   # leiden ####
   start_time <- Sys.time()
-  leiden_clustering <- clusterCells(sce,
-    use.dimred = "PCA",
-    BLUSPARAM = NNGraphParam(
-      k = n_neig,
-      cluster.fun = "leiden", cluster.args = list(resolution = resolution)
-    )
+  leiden_search <- binary_search(
+    sce,
+    do_clustering = function(spe, resolution) {
+      clusterCells(spe,
+        use.dimred = "PCA",
+        BLUSPARAM = NNGraphParam(
+          k = n_neig,
+          cluster.fun = "leiden", cluster.args = list(resolution = resolution)
+        )
+      )
+    },
+    extract_nclust = function(result) length(unique(result)),
+    n_clust_target = n_cluster
   )
+  leiden_clustering <- leiden_search$result
+  resolutions$leiden <- leiden_search$resolution
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Leiden clusterings. Time Elapsed:", time_elapsed))
+  print(paste("Leiden resolution:", resolutions$leiden))
   time$leiden <- time_elapsed
 
   return(list(
@@ -120,6 +140,7 @@ run_osca <- function(
     hvgs = hvg.sce.var,
     cell_ids = colnames(sce),
     time = time,
+    resolutions = resolutions,
     leiden = leiden_clustering,
     louvain = louvain_clustering
   ))
