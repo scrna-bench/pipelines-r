@@ -27,6 +27,9 @@ run_scrapper <- function(
   if (filter == "manual") {
     qc <- metadata(sce)$qc_thresholds
     mt_percent <- rna.qc.metrics$subsets$mt * 100
+    write(paste0("mt pcts: ", paste0(round(head(mt_percent, 3),8), collapse=";")), stderr())
+    write(paste0("cells detected: ", paste0(round(head(rna.qc.metrics$detected, 3),8), collapse=";")), stderr())
+    write(paste0("cells sum: ", paste0(round(head(rna.qc.metrics$sum, 3),8), collapse=";")), stderr())
     keep <- rna.qc.metrics$detected > qc[qc$metric == "nFeature", "min"] &
       rna.qc.metrics$detected < qc[qc$metric == "nFeature", "max"] &
       mt_percent < qc[qc$metric == "percent.mt", "max"] &
@@ -35,7 +38,9 @@ run_scrapper <- function(
     rna.qc.thresholds <- suggestRnaQcThresholds(rna.qc.metrics)
     keep <- filterRnaQcMetrics(rna.qc.thresholds, rna.qc.metrics)
   }
+  write(paste0("cells before: ", ncol(sce)), stderr())
   filtered <- sce[, keep, drop = FALSE]
+  write(paste0("cells after: ", ncol(filtered)), stderr())
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Filter data. Time Elapsed:", time_elapsed))

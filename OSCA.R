@@ -37,8 +37,10 @@ run_osca <- function(
   } else {
     reasons <- perCellQCFilters(df, sub.fields = "subsets_Mito_percent")
     keep <- !reasons$discard
-  }
+  }  
+  write(paste0("cells before: ", ncol(sce)), stderr())
   sce <- sce[, keep]
+  write(paste0("cells after: ", ncol(sce)), stderr())
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Filter data. Time Elapsed:", time_elapsed))
