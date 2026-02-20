@@ -35,7 +35,9 @@ run_scrapper <- function(
     rna.qc.thresholds <- suggestRnaQcThresholds(rna.qc.metrics)
     keep <- filterRnaQcMetrics(rna.qc.thresholds, rna.qc.metrics)
   }
+  write(paste0("dim before: ", dim(sce)), stderr())
   filtered <- sce[, keep, drop = FALSE]
+  write(paste0("dim after: ", dim(sce)), stderr())
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Filter data. Time Elapsed:", time_elapsed))
