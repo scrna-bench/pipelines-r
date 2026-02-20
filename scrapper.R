@@ -28,6 +28,8 @@ run_scrapper <- function(
     qc <- metadata(sce)$qc_thresholds
     mt_percent <- rna.qc.metrics$subsets$mt * 100
     write(paste0("mt pcts: ", paste0(round(head(mt_percent, 3),8), collapse=";")), stderr())
+    write(paste0("cells detected: ", paste0(round(head(rna.qc.metrics$detected, 3),8), collapse=";")), stderr())
+    write(paste0("cells sum: ", paste0(round(head(rna.qc.metrics$sum, 3),8), collapse=";")), stderr())
     keep <- rna.qc.metrics$detected > qc[qc$metric == "nFeature", "min"] &
       rna.qc.metrics$detected < qc[qc$metric == "nFeature", "max"] &
       mt_percent < qc[qc$metric == "percent.mt", "max"] &
