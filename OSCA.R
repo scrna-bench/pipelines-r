@@ -40,7 +40,7 @@ run_osca <- function(
   }  
   write(paste0("cells before: ", ncol(sce)), stderr())
   sce <- sce[, keep]
-  write(paste0("cells before: ", ncol(sce)), stderr())
+  write(paste0("cells after: ", ncol(sce)), stderr())
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Filter data. Time Elapsed:", time_elapsed))

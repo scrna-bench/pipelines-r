@@ -37,7 +37,7 @@ run_scrapper <- function(
   }
   write(paste0("cells before: ", ncol(sce)), stderr())
   filtered <- sce[, keep, drop = FALSE]
-  write(paste0("cells before: ", ncol(filtered)), stderr())
+  write(paste0("cells after: ", ncol(filtered)), stderr())
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Filter data. Time Elapsed:", time_elapsed))
