@@ -30,10 +30,10 @@ run_scrapper <- function(
     write(paste0("mt pcts: ", paste0(round(head(mt_percent, 3),8), collapse=";")), stderr())
     write(paste0("cells detected: ", paste0(round(head(rna.qc.metrics$detected, 3),8), collapse=";")), stderr())
     write(paste0("cells sum: ", paste0(round(head(rna.qc.metrics$sum, 3),8), collapse=";")), stderr())
-    keep <- rna.qc.metrics$detected > qc[qc$metric == "nFeature", "min"] &
-      rna.qc.metrics$detected < qc[qc$metric == "nFeature", "max"] &
+    keep <- rna.qc.metrics$detected >= qc[qc$metric == "nFeature", "min"] &
+      rna.qc.metrics$detected <= qc[qc$metric == "nFeature", "max"] &
       mt_percent < qc[qc$metric == "percent.mt", "max"] &
-      rna.qc.metrics$sum < qc[qc$metric == "nCount", "max"]
+      rna.qc.metrics$sum <= qc[qc$metric == "nCount", "max"]
   } else {
     rna.qc.thresholds <- suggestRnaQcThresholds(rna.qc.metrics)
     keep <- filterRnaQcMetrics(rna.qc.thresholds, rna.qc.metrics)
