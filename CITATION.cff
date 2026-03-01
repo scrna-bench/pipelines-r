@@ -11,12 +11,13 @@ authors:
     orcid: "https://orcid.org/0009-0007-6404-3244"
   - family-names: Kitak
     given-names: Tom
+    orcid: "https://orcid.org/0009-0004-1529-4459"
   - family-names: Robinson
     given-names: Mark
     orcid: "https://orcid.org/0000-0002-3048-5518"
 version: 1.0
 repository-code: "https://github.com/scrna-bench/pipelines-r"
-license: "MIT"
+license: MIT
 references:
   - type: article
     status: preprint
