@@ -1,16 +1,47 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-license: "MIT"
-authors:
-  - family-names: "Choudhury"
-    given-names: "Atreya"
-    orcid: "https://orcid.org/0009-0003-4975-0515"
-  - family-names: "Luo"
-    given-names: "Siyuan"
+message: "If you use this benchmark module, please consider citing it using the information from 'preferred-citation' and 'references'."
+type: software
 title: "pipelines-r"
-version: 0.1.0
-url: "https://github.com/scrna-bench/pipelines-r"
+authors:
+  - family-names: Choudhury
+    given-names: Atreya
+    orcid: "https://orcid.org/0009-0003-4975-0515"
+  - family-names: Luo
+    given-names: Siyuan
+    orcid: "https://orcid.org/0009-0007-6404-3244"
+  - family-names: Kitak
+    given-names: Tom
+  - family-names: Robinson
+    given-names: Mark
+    orcid: "https://orcid.org/0000-0002-3048-5518"
+version: 1.0
+repository-code: "https://github.com/scrna-bench/pipelines-r"
+license: "MIT"
 references:
   - type: article
+    status: preprint
+    authors:
+      - family-names: Billato
+        given-names: Ilaria
+        orcid: "https://orcid.org/0000-0002-3335-3254"
+      - family-names: Pagès
+        given-names: Hervé
+        orcid: "https://orcid.org/0009-0002-8272-4522"
+      - family-names: Carey
+        given-names: Vincent
+        orcid: "https://orcid.org/0000-0003-4046-0063"
+      - family-names: Waldron
+        given-names: Levi
+        orcid: "https://orcid.org/0000-0003-2725-0694"
+      - family-names: Sales
+        given-names: Gabriele
+        orcid: "https://orcid.org/0000-0003-2078-5661"
+      - family-names: Romualdi
+        given-names: Chiara
+        orcid: "https://orcid.org/0000-0003-4792-9047"
+      - family-names: Risso
+        given-names: Davide
+        orcid: "https://orcid.org/0000-0001-8508-5012"
+    repository-code: "https://github.com/billila/pca_scwf_paper"
     title: "Benchmarking large-scale single-cell RNA-seq analysis"
-    doi: "10.1101/2025.10.28.681564"
+    doi: 10.1101/2025.10.28.681564
