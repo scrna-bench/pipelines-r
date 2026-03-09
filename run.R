@@ -84,8 +84,8 @@ search_res_path <- file.path(run_dir, "search_res.r")
 source(search_res_path)
 
 sce <- readH5AD(args$data_path, reader = "python")
-num_clusters_truth <- as.integer(readLines(num_clusters_truth_path, n = 1))
-n_cluster <- num_clusters_truth + args$d_cluster
+clusters_truth_num <- as.integer(readLines(args$clusters_truth_num_path, n = 1))
+n_cluster <- clusters_truth_num + args$d_cluster
 
 # time object to store time involved (in seconds) in each step
 time <- list(
