@@ -25,15 +25,21 @@ parser$add_argument(
   required = TRUE
 )
 parser$add_argument(
+  "--data.clusters_truth_num",
+  dest = "clusters_truth_num_path", type = "character",
+  help = "input true number of clusters path",
+  required = TRUE
+)
+parser$add_argument(
   "--method_name",
   dest = "method_name", type = "character",
   help = "name of the method",
   choices = c("osca", "scrapper", "seurat"), required = TRUE
 )
 parser$add_argument(
-  "--n_cluster",
-  dest = "n_cluster", type = "integer",
-  help = "target number of clusters",
+  "--d_cluster",
+  dest = "d_cluster", type = "integer",
+  help = "delta number of clusters with respect to true number of clusters",
   required = TRUE
 )
 parser$add_argument(
@@ -78,6 +84,8 @@ search_res_path <- file.path(run_dir, "search_res.r")
 source(search_res_path)
 
 sce <- readH5AD(args$data_path, reader = "python")
+num_clusters_truth <- as.integer(readLines(num_clusters_truth_path, n = 1))
+n_cluster <- num_clusters_truth + args$d_cluster
 
 # time object to store time involved (in seconds) in each step
 time <- list(
@@ -95,21 +103,21 @@ if (args$method_name == "seurat") {
   source(seurat_r_path)
   output_data <- run_seurat(
     sce,
-    args$n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
   )
 } else if (args$method_name == "osca") {
   osca_r_path <- file.path(run_dir, "OSCA.R")
   source(osca_r_path)
   output_data <- run_osca(
     sce,
-    args$n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
   )
 } else if (args$method_name == "scrapper") {
   scrapper_r_path <- file.path(run_dir, "scrapper.R")
   source(scrapper_r_path)
   output_data <- run_scrapper(
     sce,
-    args$n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
   )
 }
 
