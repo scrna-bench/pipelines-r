@@ -8,7 +8,7 @@ library(EnsDb.Hsapiens.v75)
 
 run_osca <- function(
   sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
-  filter = c("manual", "auto"), time, resolutions
+  filter = c("manual", "auto"), time, clustering_info
 ) {
   filter <- match.arg(filter)
   #### 1. find mithocondial genes  ####
@@ -37,7 +37,7 @@ run_osca <- function(
   } else {
     reasons <- perCellQCFilters(df, sub.fields = "subsets_Mito_percent")
     keep <- !reasons$discard
-  }  
+  }
   write(paste0("cells before: ", ncol(sce)), stderr())
   sce <- sce[, keep]
   write(paste0("cells after: ", ncol(sce)), stderr())
@@ -106,12 +106,16 @@ run_osca <- function(
     n_clust_target = n_cluster
   )
   louvain_clustering <- louvain_search$result
-  resolutions$louvain <- louvain_search$resolution
+  clustering_info$resolutions$louvain <- louvain_search$resolution
+  clustering_info$num_runs$louvain <- louvain_search$num_runs
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
-  print(paste("Louvain clusterings. Time Elapsed:", time_elapsed))
-  print(paste("Louvain resolution:", resolutions$louvain))
-  time$louvain <- time_elapsed
+  avg_time_elapsed <- time_elapsed / louvain_search$num_runs
+  print(paste("Louvain clusterings. Total Search Time Elapsed:", time_elapsed))
+  print(paste("Louvain clusterings. Average Time per Run:", avg_time_elapsed))
+  print(paste("Louvain resolution:", clustering_info$resolutions$louvain))
+  print(paste("Louvain runs:", clustering_info$num_runs$louvain))
+  time$louvain <- avg_time_elapsed
 
   # leiden ####
   start_time <- Sys.time()
@@ -130,19 +134,23 @@ run_osca <- function(
     n_clust_target = n_cluster
   )
   leiden_clustering <- leiden_search$result
-  resolutions$leiden <- leiden_search$resolution
+  clustering_info$resolutions$leiden <- leiden_search$resolution
+  clustering_info$num_runs$leiden <- leiden_search$num_runs
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
-  print(paste("Leiden clusterings. Time Elapsed:", time_elapsed))
-  print(paste("Leiden resolution:", resolutions$leiden))
-  time$leiden <- time_elapsed
+  avg_time_elapsed <- time_elapsed / leiden_search$num_runs
+  print(paste("Leiden clusterings. Total Search Time Elapsed:", time_elapsed))
+  print(paste("Leiden clusterings. Average Time per Run:", avg_time_elapsed))
+  print(paste("Leiden resolution:", clustering_info$resolutions$leiden))
+  print(paste("Leiden runs:", clustering_info$num_runs$leiden))
+  time$leiden <- avg_time_elapsed
 
   return(list(
     pca = reducedDim(sce, "PCA"),
     hvgs = hvg.sce.var,
     cell_ids = colnames(sce),
     time = time,
-    resolutions = resolutions,
+    clustering_info = clustering_info,
     leiden = leiden_clustering,
     louvain = louvain_clustering
   ))

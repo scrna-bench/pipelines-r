@@ -3,7 +3,7 @@ library(SingleCellExperiment)
 
 run_seurat <- function(
   sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
-  filter = c("manual", "auto"), time, resolutions
+  filter = c("manual", "auto"), time, clustering_info
 ) {
   filter <- match.arg(filter)
   # data ####
@@ -115,12 +115,16 @@ run_seurat <- function(
     n_clust_target = n_cluster
   )
   data <- louvain_search$result
-  resolutions$louvain <- louvain_search$resolution
+  clustering_info$resolutions$louvain <- louvain_search$resolution
+  clustering_info$num_runs$louvain <- louvain_search$num_runs
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
-  print(paste("Louvain Clustering. Time Elapsed:", time_elapsed))
-  print(paste("Louvain resolution:", resolutions$louvain))
-  time$louvain <- time_elapsed
+  avg_time_elapsed <- time_elapsed / louvain_search$num_runs
+  print(paste("Louvain Clustering. Total Search Time Elapsed:", time_elapsed))
+  print(paste("Louvain Clustering. Average Time per Run:", avg_time_elapsed))
+  print(paste("Louvain resolution:", clustering_info$resolutions$louvain))
+  print(paste("Louvain runs:", clustering_info$num_runs$louvain))
+  time$louvain <- avg_time_elapsed
 
   # leiden ####
   start_time <- Sys.time()
@@ -133,18 +137,22 @@ run_seurat <- function(
     n_clust_target = n_cluster
   )
   data <- leiden_search$result
-  resolutions$leiden <- leiden_search$resolution
+  clustering_info$resolutions$leiden <- leiden_search$resolution
+  clustering_info$num_runs$leiden <- leiden_search$num_runs
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
-  print(paste("Leiden Clustering. Time Elapsed:", time_elapsed))
-  print(paste("Leiden resolution:", resolutions$leiden))
-  time$leiden <- time_elapsed
+  avg_time_elapsed <- time_elapsed / leiden_search$num_runs
+  print(paste("Leiden Clustering. Total Search Time Elapsed:", time_elapsed))
+  print(paste("Leiden Clustering. Average Time per Run:", avg_time_elapsed))
+  print(paste("Leiden resolution:", clustering_info$resolutions$leiden))
+  print(paste("Leiden runs:", clustering_info$num_runs$leiden))
+  time$leiden <- avg_time_elapsed
 
   return(list(
     pca = Embeddings(data, reduction = "pca"),
     hvgs = VariableFeatures(data),
     time = time,
-    resolutions = resolutions,
+    clustering_info = clustering_info,
     cell_ids = colnames(data),
     leiden = data$leiden,
     louvain = data$louvain

@@ -75,7 +75,7 @@ m <- grep("--file=", cargs)
 run_dir <- dirname(gsub("--file=", "", cargs[[m]]))
 
 timings_path <- file.path(args$output_dir, paste0(args$name, ".timings.json"))
-resolutions_path <- file.path(args$output_dir, paste0(args$name, ".resolutions.json"))
+clustering_info_path <- file.path(args$output_dir, paste0(args$name, ".clustering_info.json"))
 clusters_path <- file.path(args$output_dir, paste0(args$name, ".clusters.tsv"))
 pca_path <- file.path(args$output_dir, paste0(args$name, ".pca.tsv"))
 hvgs_path <- file.path(args$output_dir, paste0(args$name, ".hvgs.tsv"))
@@ -89,13 +89,16 @@ n_cluster <- clusters_truth_num + args$d_cluster
 
 # time object to store time involved (in seconds) in each step
 time <- list(
-  find_mit_gene = NA_real_, filter = NA_real_, normalization = NA_real_,
+  gpu_load = NA_real_, find_mit_gene = NA_real_, filter = NA_real_, normalization = NA_real_,
   hvg = NA_real_, scaling = NA_real_, pca = NA_real_,
   t_sne = NA_real_, umap = NA_real_,
   louvain = NA_real_, leiden = NA_real_
 )
 
-resolutions <- list(louvain = NA_real_, leiden = NA_real_)
+clustering_info <- list(
+  resolutions = list(louvain = NA_real_, leiden = NA_real_),
+  num_runs = list(louvain = NA_integer_, leiden = NA_integer_)
+)
 
 # source and run appropriate method
 if (args$method_name == "seurat") {
@@ -103,21 +106,24 @@ if (args$method_name == "seurat") {
   source(seurat_r_path)
   output_data <- run_seurat(
     sce,
-    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
+    time, clustering_info
   )
 } else if (args$method_name == "osca") {
   osca_r_path <- file.path(run_dir, "OSCA.R")
   source(osca_r_path)
   output_data <- run_osca(
     sce,
-    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
+    time, clustering_info
   )
 } else if (args$method_name == "scrapper") {
   scrapper_r_path <- file.path(run_dir, "scrapper.R")
   source(scrapper_r_path)
   output_data <- run_scrapper(
     sce,
-    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter, time, resolutions
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
+    time, clustering_info
   )
 }
 
@@ -130,7 +136,7 @@ write_json(
   auto_unbox = TRUE, pretty = TRUE
 )
 write_json(
-  output_data$resolutions, resolutions_path,
+  output_data$clustering_info, clustering_info_path,
   auto_unbox = TRUE, pretty = TRUE
 )
 write.table(
