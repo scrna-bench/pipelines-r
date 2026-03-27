@@ -1,5 +1,6 @@
 library(SingleCellExperiment)
 library(BPCells)
+library(AnnotationDbi)
 suppressPackageStartupMessages({
   library(dplyr)
   library(Rtsne)
