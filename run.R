@@ -34,7 +34,7 @@ parser$add_argument(
   "--method_name",
   dest = "method_name", type = "character",
   help = "name of the method",
-  choices = c("osca", "scrapper", "seurat"), required = TRUE
+  choices = c("osca", "scrapper", "seurat", "bpcells"), required = TRUE
 )
 parser$add_argument(
   "--d_cluster",
@@ -121,6 +121,14 @@ if (args$method_name == "seurat") {
   scrapper_r_path <- file.path(run_dir, "scrapper.R")
   source(scrapper_r_path)
   output_data <- run_scrapper(
+    sce,
+    n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
+    time, clustering_info
+  )
+} else if (args$method_name == "bpcells") {
+  bpcells_r_path <- file.path(run_dir, "bpcells.R")
+  source(bpcells_r_path)
+  output_data <- run_bpcells(
     sce,
     n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
     time, clustering_info
