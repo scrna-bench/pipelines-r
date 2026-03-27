@@ -7,17 +7,8 @@ suppressPackageStartupMessages({
   library(uwot)
 })
 
-
 # building a pipeline roughly from here
 # https://bnprks.github.io/BPCells/articles/pbmc3k.html#rna-normalization-pca-and-umap
-# Substitute your preferred working directory for data_dir
-data_dir <- file.path(tempdir(), "pbmc-3k")
-dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-setwd(data_dir)
-
-mat_raw <- open_matrix_10x_hdf5("pbmc_3k_10x.h5", feature_type="Gene Expression") %>%
-    write_matrix_dir("pbmc_3k_rna_raw")
-
 
 run_bpcells <- function(
   sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
