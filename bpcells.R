@@ -2,6 +2,7 @@ library(SingleCellExperiment)
 library(BPCells)
 library(AnnotationDbi)
 library(EnsDb.Hsapiens.v75)
+library(scuttle)
 suppressPackageStartupMessages({
   library(dplyr)
   library(Rtsne)
