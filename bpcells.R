@@ -56,6 +56,7 @@ run_bpcells <- function(
   # NEED TO TIME THIS PART
   # sce is your existing SingleCellExperiment
   mat <- assay(sce, "counts")
+  mat <- as(matrix, "dgCMatrix")
 
   write_matrix_dir(mat = mat, dir = "bpcells_counts")
   bp_mat <- open_matrix_dir("bpcells_counts")
