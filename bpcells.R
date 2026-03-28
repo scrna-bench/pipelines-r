@@ -58,7 +58,7 @@ run_bpcells <- function(
   mat <- assay(sce, "counts")
   mat <- as(mat, "dgCMatrix")
 
-  write_matrix_dir(mat = mat, dir = "bpcells_counts")
+  write_matrix_dir(mat = mat, dir = "bpcells_counts", compress = FALSE)
   bp_mat <- open_matrix_dir("bpcells_counts")
 
   # normalization ####
