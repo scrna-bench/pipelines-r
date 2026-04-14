@@ -149,6 +149,8 @@ run_bpcells <- function(
 
   # louvain  ####
   start_time <- Sys.time()
+  knn <- knn_hnsw(pca, k = n_neig, ef = 200)
+  snn <- knn %>% knn_to_snn_graph()
   louvain_search <- binary_search(
     sce,
     do_clustering = function(snn, resolution) {
