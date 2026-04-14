@@ -93,11 +93,13 @@ run_bpcells <- function(
   start_time <- Sys.time()
   mat_hvg <- mat_log[hvg_idx, ]
   mat_hvg <- write_matrix_memory(mat_hvg, compress = FALSE)
+  print(paste("Dimension of HVG matrix:", nrow(mat_hvg), ncol(mat_hvg)))
   svd <- BPCells::svds(mat_hvg, k = n_comp)
 
   # Cell embeddings: cells x PCs
   pca <- multiply_cols(svd$v, svd$d)
   pca <- as.matrix(pca)
+  print(paste("Dimension of PCA matrix:", nrow(pca), ncol(pca)))
 
   colnames(pca) <- paste0("PC_", seq_len(ncol(pca)))
   rownames(pca) <- colnames(mat)
@@ -149,8 +151,8 @@ run_bpcells <- function(
 
   # louvain  ####
   start_time <- Sys.time()
-  knn <- knn_hnsw(pca, k = n_neig, ef = 200)
-  snn <- knn %>% knn_to_snn_graph()
+  snn <- knn_hnsw(pca, k = n_neig, ef = 200) %>% knn_to_snn_graph()
+  print(paste("Dimension of SNN:", nrow(mat_hvg)))
   louvain_search <- binary_search(
     sce,
     do_clustering = function(snn, resolution) {
@@ -173,8 +175,7 @@ run_bpcells <- function(
 
   # leiden ####
   start_time <- Sys.time()
-  knn <- knn_hnsw(pca, k = n_neig, ef = 200)
-  snn <- knn %>% knn_to_snn_graph()
+  snn <- knn_hnsw(pca, k = n_neig, ef = 200) %>% knn_to_snn_graph()
   leiden_search <- binary_search(
     sce,
     do_clustering = function(snn, resolution) {
