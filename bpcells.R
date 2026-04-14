@@ -93,7 +93,7 @@ run_bpcells <- function(
   start_time <- Sys.time()
   mat_hvg <- mat_log[hvg_idx, ]
   mat_hvg <- write_matrix_memory(mat_hvg, compress = FALSE)
-  svd <- BPCells::svds(mat_scaled, k = n_comp)
+  svd <- BPCells::svds(mat_hvg, k = n_comp)
 
   # Cell embeddings: cells x PCs
   pca <- multiply_cols(svd$v, svd$d)
