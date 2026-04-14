@@ -17,44 +17,45 @@ run_bpcells <- function(
   sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
   filter = c("manual", "auto"), time, clustering_info) {
 
-  # filter <- match.arg(filter)
-  # #### 1. find mithocondial genes  ####
-  # start_time <- Sys.time()
-  # chr.loc <- mapIds(EnsDb.Hsapiens.v75,
-  #   keys = rownames(sce),
-  #   keytype = "SYMBOL", column = "SEQNAME"
-  # )
-  # is.mito <- which(chr.loc == "MT")
-  # df <- perCellQCMetrics(sce, subsets = list(Mito = is.mito))
-  # # include them in the object
-  # colData(sce) <- cbind(colData(sce), df)
-  # end_time <- Sys.time()
-  # time_elapsed <- end_time - start_time
-  # print(paste("Find mithocondial genes. Time Elapsed:", time_elapsed))
-  # time$find_mit_gene <- time_elapsed
-  # 
-  # # 2. filter data ####
-  # start_time <- Sys.time()
-  # if (filter == "manual") {
-  #   qc <- metadata(sce)$qc_thresholds
-  #   keep <- df$detected > qc[qc$metric == "nFeature", "min"] &
-  #     df$detected < qc[qc$metric == "nFeature", "max"] &
-  #     df$subsets_Mito_percent < qc[qc$metric == "percent.mt", "max"] &
-  #     df$sum < qc[qc$metric == "nCount", "max"]
-  # } else {
-  #   reasons <- perCellQCFilters(df, sub.fields = "subsets_Mito_percent")
-  #   keep <- !reasons$discard
-  # }
-  # write(paste0("cells before: ", ncol(sce)), stderr())
-  # sce <- sce[, keep]
-  # write(paste0("cells after: ", ncol(sce)), stderr())
-  # end_time <- Sys.time()
-  # time_elapsed <- end_time - start_time
-  # print(paste("Filter data. Time Elapsed:", time_elapsed))
-  # time$filter <- time_elapsed
+  filter <- match.arg(filter)
+  #### 1. find mitochondial genes  ####
+  start_time <- Sys.time()
+  chr.loc <- mapIds(EnsDb.Hsapiens.v75,
+    keys = rownames(sce),
+    keytype = "SYMBOL", column = "SEQNAME"
+  )
+  is.mito <- which(chr.loc == "MT")
+  df <- perCellQCMetrics(sce, subsets = list(Mito = is.mito))
+  # include them in the object
+  colData(sce) <- cbind(colData(sce), df)
+  end_time <- Sys.time()
+  time_elapsed <- end_time - start_time
+  print(paste("Find mithocondial genes. Time Elapsed:", time_elapsed))
+  time$find_mit_gene <- time_elapsed
+  
+  # 2. filter data ####
+  start_time <- Sys.time()
+  if (filter == "manual") {
+    qc <- metadata(sce)$qc_thresholds
+    keep <- df$detected > qc[qc$metric == "nFeature", "min"] &
+      df$detected < qc[qc$metric == "nFeature", "max"] &
+      df$subsets_Mito_percent < qc[qc$metric == "percent.mt", "max"] &
+      df$sum < qc[qc$metric == "nCount", "max"]
+  } else {
+    reasons <- perCellQCFilters(df, sub.fields = "subsets_Mito_percent")
+    keep <- !reasons$discard
+  }
+  write(paste0("cells before: ", ncol(sce)), stderr())
+  sce <- sce[, keep]
+  write(paste0("cells after: ", ncol(sce)), stderr())
+  end_time <- Sys.time()
+  time_elapsed <- end_time - start_time
+  print(paste("Filter data. Time Elapsed:", time_elapsed))
+  time$filter <- time_elapsed
 
   # NEED TO TIME THIS PART
   # sce is your existing SingleCellExperiment
+  start_time <- Sys.time()
   mat <- assay(sce, "counts")
   mat <- as(mat, "dgCMatrix")
 
@@ -62,7 +63,6 @@ run_bpcells <- function(
   bp_mat <- open_matrix_dir("bpcells_counts")
 
   # normalization ####
-  start_time <- Sys.time()
   cell_sums <- Matrix::colSums(mat)
   mat_log <- bp_mat %>%
     multiply_cols(1 / cell_sums) %>%
