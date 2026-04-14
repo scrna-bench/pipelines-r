@@ -146,8 +146,6 @@ run_bpcells <- function(
 # ----------------------------
 # 7. Clustering
 # ----------------------------
-clust_louvain <- snn %>% cluster_graph_louvain()
-clust_leiden  <- snn %>% cluster_graph_leiden()
 
   # louvain  ####
   start_time <- Sys.time()
