@@ -154,7 +154,7 @@ run_bpcells <- function(
   snn <- knn_hnsw(pca, k = n_neig, ef = 200) %>% knn_to_snn_graph()
   print(paste("Dimension of SNN:", nrow(mat_hvg)))
   louvain_search <- binary_search(
-    sce,
+    snn,
     do_clustering = function(snn, resolution) {
       clust_louvain <- snn %>% cluster_graph_louvain(resolution = resolution)
     },
@@ -177,9 +177,9 @@ run_bpcells <- function(
   start_time <- Sys.time()
   snn <- knn_hnsw(pca, k = n_neig, ef = 200) %>% knn_to_snn_graph()
   leiden_search <- binary_search(
-    sce,
+    snn,
     do_clustering = function(snn, resolution) {
-      clust_louvain <- snn %>% cluster_graph_louvain(resolution = resolution)
+      clust_leiden <- snn %>% cluster_graph_leiden(resolution = resolution)
     },
     extract_nclust = function(result) length(unique(result)),
     n_clust_target = n_cluster
