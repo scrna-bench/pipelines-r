@@ -3,6 +3,7 @@
 library(argparse)
 library(jsonlite)
 library(zellkonverter)
+options(digits.secs=4)
 
 parser <- ArgumentParser(description = "Benchmarking entrypoint")
 
@@ -146,7 +147,7 @@ write_json(
 )
 
 date_to_ts <- function(u) {
-  tm <- format(u, "%Y-%m-%d %H:%M:%OS")
+  tm <- format(u, "%Y-%m-%d %H:%M:%OS4")
   as.numeric(as.POSIXct(tm))
 }
 
