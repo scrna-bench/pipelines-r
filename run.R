@@ -154,6 +154,8 @@ print(output_data$starts)
 print(output_data$ends)
 
 output_data$sandwiches <- mapply(function(s, e) {
+  if( is.na(s) | is.na(e) )
+    return(c(NA,NA))
   c(date_to_ts(s), date_to_ts(e))
 }, output_data$starts, output_data$ends, SIMPLIFY = FALSE)
 write_json(
