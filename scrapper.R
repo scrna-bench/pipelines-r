@@ -86,10 +86,10 @@ run_scrapper <- function(
   # t-sne ####
   starts$t_sne <- start_time <- Sys.time()
   tsne.out <- runTsne(pca$components, num.threads = max_threads)
-  end_time <- Sys.time()
+  ends$t_sne <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("t-sne. Time Elapsed:", time_elapsed))
-  ends$t_sne <- time$t_sne <- time_elapsed
+  time$t_sne <- time_elapsed
   reducedDim(filtered, "TSNE") <- tsne.out
 
   # umap ####
