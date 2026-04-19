@@ -4,26 +4,26 @@ library(scrapper)
 
 run_scrapper <- function(
   sce, n_cluster, n_comp = 50, n_neig = 15, n_hvg = 1000,
-  filter = c("manual", "auto"), time, clustering_info
+  filter = c("manual", "auto"), starts, ends, time, clustering_info,
+  max_threads = 1
 ) {
   filter <- match.arg(filter)
-  nthreads <- 1
   assay(sce) <- DelayedArray(assay(sce))
 
   #### 1. find mithocondial genes  ####
-  start_time <- Sys.time()
+  starts$find_mit_gene <- start_time <- Sys.time()
   is.mito <- grepl("^MT-", rownames(sce))
   rna.qc.metrics <- computeRnaQcMetrics(assay(sce),
     subsets = list(mt = is.mito),
-    num.threads = nthreads
+    num.threads = max_threads
   )
-  end_time <- Sys.time()
+  ends$find_mit_gene <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Find mithocondrial genes. Time Elapsed:", time_elapsed))
   time$find_mit_gene <- time_elapsed
 
   # filter data ####
-  start_time <- Sys.time()
+  starts$filter <- start_time <- Sys.time()
   if (filter == "manual") {
     qc <- metadata(sce)$qc_thresholds
     mt_percent <- rna.qc.metrics$subsets$mt * 100
@@ -41,72 +41,72 @@ run_scrapper <- function(
   write(paste0("cells before: ", ncol(sce)), stderr())
   filtered <- sce[, keep, drop = FALSE]
   write(paste0("cells after: ", ncol(filtered)), stderr())
-  end_time <- Sys.time()
+  ends$filter <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Filter data. Time Elapsed:", time_elapsed))
   time$filter <- time_elapsed
 
   # normalization ####
-  start_time <- Sys.time()
+  starts$normalization <- start_time <- Sys.time()
   size.factors <- centerSizeFactors(rna.qc.metrics$sum[keep])
   normalized <- normalizeCounts(assay(filtered), size.factors)
-  end_time <- Sys.time()
+  ends$normalization <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Normalization. Time Elapsed:", time_elapsed))
   time$normalization <- time_elapsed
   assay(filtered, "normalized") <- normalized
 
   # Identification of highly variable features (feature selection) ####
-  start_time <- Sys.time()
+  starts$hvg <- start_time <- Sys.time()
   gene.var <- modelGeneVariances(
     assay(filtered, "normalized"),
-    num.threads = nthreads
+    num.threads = max_threads
   )
   hvg.sce.var <- chooseHighlyVariableGenes(
     gene.var$statistics$residuals,
     top = n_hvg
   )
-  end_time <- Sys.time()
+  ends$hvg <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("Identification of highly variable features. Time Elapsed:", time_elapsed))
   time$hvg <- time_elapsed
 
   # PCA ####
-  start_time <- Sys.time()
+  starts$pca <- start_time <- Sys.time()
   pca <- runPca(
     (assay(filtered, "normalized")[hvg.sce.var, ]),
-    num.threads = nthreads, number = n_comp
+    num.threads = max_threads, number = n_comp
   )
-  end_time <- Sys.time()
+  ends$pca <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("PCA. Time Elapsed:", time_elapsed))
   time$pca <- time_elapsed
   reducedDim(filtered, "PCA") <- t(pca$components)
 
   # t-sne ####
-  start_time <- Sys.time()
-  tsne.out <- runTsne(pca$components, num.threads = nthreads)
+  starts$t_sne <- start_time <- Sys.time()
+  tsne.out <- runTsne(pca$components, num.threads = max_threads)
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("t-sne. Time Elapsed:", time_elapsed))
-  time$t_sne <- time_elapsed
+  ends$t_sne <- time$t_sne <- time_elapsed
   reducedDim(filtered, "TSNE") <- tsne.out
 
   # umap ####
-  start_time <- Sys.time()
+  starts$umap <- start_time <- Sys.time()
   set.seed(1000000)
-  umap.out <- runUmap(pca$components, num.threads = nthreads)
-  end_time <- Sys.time()
+  umap.out <- runUmap(pca$components, num.threads = max_threads)
+  ends$umap <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("UMAP. Time Elapsed:", time_elapsed))
   time$umap <- time_elapsed
   reducedDim(filtered, "UMAP") <- umap.out
 
   # louvain  ####
-  start_time <- Sys.time()
+  starts$louvain <- start_time <- Sys.time()
   snn.graph.louvain <- buildSnnGraph(
     pca$components,
-    num.neighbors = n_neig, num.threads = nthreads
+    num.neighbors = n_neig, num.threads = max_threads
   )
   louvain_search <- binary_search(
     snn.graph.louvain,
@@ -119,7 +119,7 @@ run_scrapper <- function(
   louvain_clustering <- louvain_search$result$membership
   clustering_info$resolutions$louvain <- louvain_search$resolution
   clustering_info$num_runs$louvain <- louvain_search$num_runs
-  end_time <- Sys.time()
+  ends$louvain <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   avg_time_elapsed <- time_elapsed / louvain_search$num_runs
   print(paste("Louvain clusterings. Total Search Time Elapsed:", time_elapsed))
@@ -129,10 +129,10 @@ run_scrapper <- function(
   time$louvain <- avg_time_elapsed
 
   # leiden ####
-  start_time <- Sys.time()
+  starts$leiden <- start_time <- Sys.time()
   snn.graph.leiden <- buildSnnGraph(
     pca$components,
-    num.neighbors = n_neig, num.threads = nthreads
+    num.neighbors = n_neig, num.threads = max_threads
   )
   leiden_search <- binary_search(
     snn.graph.leiden,
@@ -145,7 +145,7 @@ run_scrapper <- function(
   leiden_clustering <- leiden_search$result$membership
   clustering_info$resolutions$leiden <- leiden_search$resolution
   clustering_info$num_runs$leiden <- leiden_search$num_runs
-  end_time <- Sys.time()
+  ends$leiden <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   avg_time_elapsed <- time_elapsed / leiden_search$num_runs
   print(paste("Leiden clusterings. Total Search Time Elapsed:", time_elapsed))
@@ -159,6 +159,8 @@ run_scrapper <- function(
     hvgs = rownames(filtered)[hvg.sce.var],
     cell_ids = colnames(filtered),
     time = time,
+    starts = starts,
+    ends = ends,
     clustering_info = clustering_info,
     leiden = leiden_clustering,
     louvain = louvain_clustering

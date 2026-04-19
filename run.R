@@ -68,12 +68,21 @@ parser$add_argument(
   default = "manual", required = FALSE
 )
 
+parser$add_argument(
+  "--max_threads",
+  dest = "max_threads", type = "integer",
+  help = "maximum number of threads to use in the pipeline steps",
+  required = TRUE
+)
+
+
 args <- parser$parse_args()
 
 cargs <- commandArgs(trailingOnly = FALSE)
 m <- grep("--file=", cargs)
 run_dir <- dirname(gsub("--file=", "", cargs[[m]]))
 
+sandwiches_path <- file.path(args$output_dir, paste0(args$name, ".timings_sandwiches.json"))
 timings_path <- file.path(args$output_dir, paste0(args$name, ".timings.json"))
 clustering_info_path <- file.path(args$output_dir, paste0(args$name, ".clustering_info.json"))
 clusters_path <- file.path(args$output_dir, paste0(args$name, ".clusters.tsv"))
@@ -88,7 +97,7 @@ clusters_truth_num <- as.integer(readLines(args$clusters_truth_num_path, n = 1))
 n_cluster <- clusters_truth_num + args$d_cluster
 
 # time object to store time involved (in seconds) in each step
-time <- list(
+starts <- ends <- time <- list(
   gpu_load = NA_real_, find_mit_gene = NA_real_, filter = NA_real_, normalization = NA_real_,
   hvg = NA_real_, scaling = NA_real_, pca = NA_real_,
   t_sne = NA_real_, umap = NA_real_,
@@ -107,7 +116,7 @@ if (args$method_name == "seurat") {
   output_data <- run_seurat(
     sce,
     n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
-    time, clustering_info
+    starts, ends, time, clustering_info, args$max_threads
   )
 } else if (args$method_name == "osca") {
   osca_r_path <- file.path(run_dir, "OSCA.R")
@@ -115,7 +124,7 @@ if (args$method_name == "seurat") {
   output_data <- run_osca(
     sce,
     n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
-    time, clustering_info
+    starts, ends, time, clustering_info, args$max_threads
   )
 } else if (args$method_name == "scrapper") {
   scrapper_r_path <- file.path(run_dir, "scrapper.R")
@@ -123,7 +132,7 @@ if (args$method_name == "seurat") {
   output_data <- run_scrapper(
     sce,
     n_cluster, args$n_comp, args$n_neig, args$n_hvg, args$filter,
-    time, clustering_info
+    starts, ends, time, clustering_info, args$max_threads
   )
 }
 
@@ -133,6 +142,19 @@ output_data$time <- lapply(output_data$time, function(x) {
 })
 write_json(
   output_data$time, timings_path,
+  auto_unbox = TRUE, pretty = TRUE
+)
+
+date_to_ts <- function(u) {
+  tm <- format(u, "%Y-%m-%d %H:%M:%OS")
+  as.numeric(as.POSIXct(tm))
+}
+
+output_data$sandwiches <- mapply(function(s, e) {
+  c(date_to_ts(s), date_to_ts(e))
+}, output_data$starts, output_data$ends)
+write_json(
+  output_data$sandwiches, sandwiches_path,
   auto_unbox = TRUE, pretty = TRUE
 )
 write_json(
