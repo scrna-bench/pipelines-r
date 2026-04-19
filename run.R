@@ -150,12 +150,15 @@ date_to_ts <- function(u) {
   as.numeric(as.POSIXct(tm))
 }
 
+print(output_data$starts)
+print(output_data$ends)
+
 output_data$sandwiches <- mapply(function(s, e) {
   c(date_to_ts(s), date_to_ts(e))
-}, output_data$starts, output_data$ends)
+}, output_data$starts, output_data$ends, SIMPLIFY = FALSE)
 write_json(
   output_data$sandwiches, sandwiches_path,
-  auto_unbox = TRUE, pretty = TRUE
+  auto_unbox = TRUE
 )
 write_json(
   output_data$clustering_info, clustering_info_path,
