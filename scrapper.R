@@ -95,7 +95,7 @@ run_scrapper <- function(
   # umap ####
   starts$umap <- start_time <- Sys.time()
   set.seed(1000000)
-  umap.out <- runUmap(pca$components, num.threads = max_threads)
+  umap.out <- runUmap(pca$components, num.threads = max_threads, parallel.optimization=TRUE)
   ends$umap <- end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("UMAP. Time Elapsed:", time_elapsed))
