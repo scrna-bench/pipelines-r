@@ -75,7 +75,8 @@ run_scrapper <- function(
   start_time <- Sys.time()
   pca <- runPca(
     (assay(filtered, "normalized")[hvg.sce.var, ]),
-    num.threads = nthreads, number = n_comp
+    num.threads = nthreads,
+    number = n_comp
   )
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
@@ -95,7 +96,7 @@ run_scrapper <- function(
   # umap ####
   start_time <- Sys.time()
   set.seed(1000000)
-  umap.out <- runUmap(pca$components, num.threads = nthreads)
+  umap.out <- runUmap(pca$components, num.threads = nthreads, parallel.optimization=TRUE)
   end_time <- Sys.time()
   time_elapsed <- end_time - start_time
   print(paste("UMAP. Time Elapsed:", time_elapsed))
