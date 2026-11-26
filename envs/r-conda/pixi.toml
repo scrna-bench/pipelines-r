@@ -1,0 +1,27 @@
+# Export-only conda route for envs/r (the rv project builds the image). Solved
+# separately from rv, so package versions can differ from the image.
+[workspace]
+channels = ["conda-forge", "bioconda", "https://prefix.dev/almost-conductor"]
+platforms = ["linux-64"]
+name = "pipelines-r-r-conda"
+
+[dependencies]
+r-base = "4.5.*"
+r-jsonlite = "==2.0.0"
+r-obkit = "==0.0.4"
+bioconductor-singlecellexperiment = "==1.32.0"
+bioconductor-anndatar = "==1.0.2"
+bioconductor-rhdf5 = "==2.54.1"
+# conda-forge has no Seurat 6 yet; the rv image has 6.0.0
+r-seurat = "==5.5.1"
+r-leidenbase = "==0.1.36"
+bioconductor-scuttle = "==1.20.0"
+bioconductor-scran = "==1.38.1"
+bioconductor-scater = "==1.38.1"
+bioconductor-bluster = "==1.20.0"
+bioconductor-annotationdbi = "==1.72.0"
+"bioconductor-ensdb.hsapiens.v75" = "==2.99.0"
+r-uwot = "==0.2.5"
+r-rtsne = "==0.17"
+bioconductor-scrapper = "==1.4.0"
+bioconductor-delayedarray = "==0.36.1"
