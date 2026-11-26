@@ -1,0 +1,21 @@
+[project]
+name = "pipelines-r-bixverse"
+r_version = "4.5"
+
+repositories = [
+  { alias = "PPM", url = "https://packagemanager.posit.co/cran/latest" },
+  { alias = "BioCsoft", url = "https://bioconductor.org/packages/3.22/bioc" },
+  { alias = "omnibenchmark", url = "https://omnibenchmark.r-universe.dev" },
+]
+
+# bixverse builds from Rust sources: containerize needs `rust-toolchain`
+# (rustc >= 1.90). Pinned to the version the omni-training port was tested on.
+dependencies = [
+  "argparse",
+  "jsonlite",
+  "SingleCellExperiment",
+  "anndataR",
+  "rhdf5",
+  "obkit",
+  { name = "bixverse", git = "https://github.com/GregorLueg/bixverse", tag = "v0.6.3" },
+]
