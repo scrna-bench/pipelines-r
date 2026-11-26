@@ -1,0 +1,34 @@
+[project]
+name = "pipelines-r"
+r_version = "4.5"
+
+repositories = [
+  { alias = "PPM", url = "https://packagemanager.posit.co/cran/latest" },
+  { alias = "BioCsoft", url = "https://bioconductor.org/packages/3.22/bioc" },
+  { alias = "BioCann", url = "https://bioconductor.org/packages/3.22/data/annotation" },
+  { alias = "omnibenchmark", url = "https://omnibenchmark.r-universe.dev" },
+]
+
+# seurat, osca and scrapper entrypoints (bixverse has its own env)
+dependencies = [
+  "SingleCellExperiment",
+  "anndataR",
+  "rhdf5",
+  "jsonlite",
+  "obkit",
+  # seurat
+  "Seurat",
+  "leidenbase",
+  # osca
+  "scuttle",
+  "scran",
+  "scater",
+  "bluster",
+  "AnnotationDbi",
+  "EnsDb.Hsapiens.v75",
+  "uwot",
+  "Rtsne",
+  # scrapper
+  "scrapper",
+  "DelayedArray",
+]
