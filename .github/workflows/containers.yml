@@ -1,0 +1,59 @@
+# Build each envs/<env>/ lock project into an image with the containerize action.
+# On main: push ghcr.io/scrna-bench/<repo>:<env>-<sha> and <env>-latest (the
+# plan pins <env>-<sha>). On pull requests: build only, as a test.
+name: containers
+
+on:
+  push:
+    branches: [main]
+    paths: ["envs/**", ".github/workflows/containers.yml"]
+  pull_request:
+    paths: ["envs/**", ".github/workflows/containers.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: r
+          - env: bixverse
+            rust-toolchain: "1.91.0"
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/login-action@v4
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: tag
+        run: echo "tag=${{ matrix.env }}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: robinsonlabuzh/containerize@main
+        id: build
+        with:
+          namespace: scrna-bench
+          image-name: ${{ github.event.repository.name }}
+          lock-file-dir: envs/${{ matrix.env }}
+          image-tag: ${{ steps.tag.outputs.tag }}
+          rust-toolchain: ${{ matrix.rust-toolchain || '' }}
+
+      - name: Push
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ steps.build.outputs.image }}
+          LATEST: scrna-bench/${{ github.event.repository.name }}:${{ matrix.env }}-latest
+        run: |
+          docker tag "$IMAGE" "ghcr.io/$IMAGE"
+          docker tag "$IMAGE" "ghcr.io/$LATEST"
+          docker push "ghcr.io/$IMAGE"
+          docker push "ghcr.io/$LATEST"
