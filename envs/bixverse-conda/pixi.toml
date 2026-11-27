@@ -1,0 +1,15 @@
+# Export-only conda route for envs/bixverse (the rv project builds the image).
+# r-bixverse comes prebuilt from almost-conductor, pinned to the rv version.
+[workspace]
+channels = ["conda-forge", "bioconda", "https://prefix.dev/almost-conductor"]
+platforms = ["linux-64"]
+name = "pipelines-r-bixverse-conda"
+
+[dependencies]
+r-base = "4.5.*"
+r-jsonlite = "==2.0.0"
+r-obkit = "==0.0.4"
+bioconductor-singlecellexperiment = "==1.32.0"
+bioconductor-anndatar = "==1.0.2"
+bioconductor-rhdf5 = "==2.54.1"
+r-bixverse = "==0.6.3"

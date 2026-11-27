@@ -1,2 +1,5 @@
 entrypoints:
-  default: run.R
+  seurat: pipelines/seurat.R
+  osca: pipelines/osca.R
+  scrapper: pipelines/scrapper.R
+  bixverse: pipelines/bixverse.R
